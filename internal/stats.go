@@ -1,18 +1,38 @@
 package internal
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+)
+
+var (
+	winnerTicketAsset *ebiten.Image
+)
 
 type Item interface {
 	Interact() interface{}
 }
 
 type Stats struct {
+	drawWinnner bool
+
 	money int
 	day   int
 
 	inventory []Item
 	home      *Home
 	store     *Store
+}
+
+func init() {
+	igbm, _, err := ebitenutil.NewImageFromFile("./assets/winner.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+	winnerTicketAsset = igbm
 }
 
 func (s *Stats) CheckAllTickets() {
@@ -28,17 +48,22 @@ func (s *Stats) CheckAllTickets() {
 	s.money += totalWinning
 }
 
-func (s *Stats) CheckTicket(slot int) {
+func (s *Stats) CheckTicket(slot int) (t *Ticket) {
 	ticket := s.inventory[slot]
+	if ticket == nil {
+		return nil
+	}
 	if game := ticket.Interact(); game != nil {
 		s.money += game.(*TicketGame).Win
 		// Play winning sounds/graphics
 		fmt.Printf("You won: %s, $%d\n", game.(*TicketGame).Prize, game.(*TicketGame).Win)
+		s.drawWinnner = true
+		t = ticket.(*Ticket)
 	} else {
 		fmt.Println("Better luck next time")
 	}
 	s.inventory[slot] = nil
-
+	return t
 }
 
 func (s *Stats) HandleButtons(place Place) bool {

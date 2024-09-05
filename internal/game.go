@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"math"
 	"math/rand/v2"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -20,6 +21,19 @@ const (
 	STORE Place = "STORE"
 )
 
+type Effect struct {
+	name     string
+	duration float64
+	active   bool
+}
+
+type Animation struct {
+	image       *ebiten.Image
+	drawOptions *ebiten.DrawImageOptions
+	startTime   time.Time
+	effect      *Effect
+}
+
 type Circle struct {
 	x, y, r float32
 }
@@ -30,6 +44,7 @@ type Game struct {
 	input util.InputHandler
 
 	inventorySlotLocations []Circle
+	activeAnimations       []*Animation
 }
 
 func NewGame(input util.InputHandler) (*Game, error) {
@@ -83,6 +98,7 @@ func NewGame(input util.InputHandler) (*Game, error) {
 			},
 			store: &Store{},
 		},
+		activeAnimations:       []*Animation{},
 		inventorySlotLocations: circles,
 		input:                  input,
 	}, nil
@@ -100,6 +116,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	case STORE:
 		g.stats.store.Draw(screen)
 	}
+	for _, animation := range g.activeAnimations {
+		screen.DrawImage(animation.image, animation.drawOptions)
+	}
 }
 
 // Layout implements ebiten.Game.
@@ -110,6 +129,24 @@ func (g *Game) Layout(outsideWidth int, outsideHeight int) (screenWidth int, scr
 // Update implements ebiten.Game.
 func (g *Game) Update() error {
 	g.HandleButtons()
+
+	var afterLoop []*Animation
+	for _, animation := range g.activeAnimations {
+		if time.Since(animation.startTime).Seconds() >= animation.effect.duration && !animation.effect.active {
+			animation.effect.active = true
+		}
+		if animation.effect.active {
+			switch animation.effect.name {
+			case "fadeout":
+				animation.drawOptions.ColorScale.Scale(1, 1, 1, animation.drawOptions.ColorScale.A()-0.02)
+				if animation.drawOptions.ColorScale.A() == 0 {
+					continue
+				}
+			}
+		}
+		afterLoop = append(afterLoop, animation)
+	}
+	g.activeAnimations = afterLoop
 	return nil
 }
 
@@ -134,7 +171,9 @@ func (g *Game) HandleButtons() bool {
 		} else {
 			switch {
 			case g.stats.HandleButtons(g.currentPlace):
+				return true
 			case g.findInventorySlot():
+				return true
 			}
 		}
 	}
@@ -175,7 +214,40 @@ func (g *Game) findInventorySlot() bool {
 
 	slot := g.pointInWhichCircle(float32(mouseX), float32(mouseY))
 	if slot != -1 {
-		g.stats.CheckTicket(slot)
+		if ticket := g.stats.CheckTicket(slot); ticket != nil {
+			asset := ebiten.NewImage(winnerTicketAsset.Bounds().Size().X,winnerTicketAsset.Bounds().Size().Y)
+			// asset := winnerTicketAsset
+			size := asset.Bounds().Size()
+			
+			doptions := &ebiten.DrawImageOptions{}
+			doptions.GeoM.Scale(130.0/float64(size.X), 120.0/float64(size.Y))
+			// Move the image's center to the origin for rotation
+			centerX, centerY := float64(asset.Bounds().Dx())/2, float64(asset.Bounds().Dy())/2
+			doptions.GeoM.Translate(-centerX, -centerY)
+			// Rotate the image anti-clockwise by 90 degrees (π/2 radians)
+			doptions.GeoM.Rotate(-(48*math.Pi / 180))
+			// Move the image back from the origin to its original position plus any desired offset
+			doptions.GeoM.Translate(centerX, centerY)
+
+			doptions.GeoM.Translate(70, 20)
+			
+			
+			ticketAsset := TicketAssets[ticket.Name]
+			asset.DrawImage(ticketAsset, doptions)
+			asset.DrawImage(winnerTicketAsset, &ebiten.DrawImageOptions{})
+
+			op := &ebiten.DrawImageOptions{}
+			op.GeoM.Translate(200, 100)
+			g.activeAnimations = append(g.activeAnimations, &Animation{
+				image:       asset,
+				drawOptions: op,
+				startTime:   time.Now(),
+				effect: &Effect{
+					name:     "fadeout",
+					duration: 2,
+				},
+			})
+		}
 		return true
 	}
 	return false
