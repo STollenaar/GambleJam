@@ -45,6 +45,10 @@ type Game struct {
 
 	inventorySlotLocations []Circle
 	activeAnimations       []*Animation
+
+	startX, startY, startWidth, startHeight, startRot float64
+
+	kbHandler *util.KeyboardHandler
 }
 
 func NewGame(input util.InputHandler) (*Game, error) {
@@ -88,6 +92,11 @@ func NewGame(input util.InputHandler) (*Game, error) {
 
 	return &Game{
 		currentPlace: STORE,
+		startX:       73.2,
+		startY:       7.7,
+		startWidth:   251.9,
+		startHeight:  283.1,
+		startRot: 45.3,
 		stats: &Stats{
 			money:     util.ConfigFile.StartingMoney,
 			day:       0,
@@ -101,6 +110,7 @@ func NewGame(input util.InputHandler) (*Game, error) {
 		activeAnimations:       []*Animation{},
 		inventorySlotLocations: circles,
 		input:                  input,
+		kbHandler:              util.NewKBHandler(),
 	}, nil
 }
 
@@ -129,6 +139,31 @@ func (g *Game) Layout(outsideWidth int, outsideHeight int) (screenWidth int, scr
 // Update implements ebiten.Game.
 func (g *Game) Update() error {
 	g.HandleButtons()
+
+	switch key := g.kbHandler.Read(); key {
+	case util.KeyA:
+		g.startWidth-=0.1
+	case util.KeyD:
+		g.startWidth+=0.1
+	case util.KeyW:
+		g.startHeight+=0.1
+	case util.KeyS:
+		g.startHeight-=0.1
+	case util.KeyUp:
+		g.startY+=0.1
+	case util.KeyDown:
+		g.startY-=0.1
+	case util.KeyLeft:
+		g.startX-=0.1
+	case util.KeyRight:
+		g.startX+=0.1
+	case util.KeyF:
+		g.startRot-=0.1
+	case util.KeyG:
+		g.startRot+=0.1
+	}
+
+	// fmt.Printf("startWidth: %v, startHeight: %v, startX: %v, startY: %v, startRot: %v\n", g.startWidth, g.startHeight, g.startX, g.startY, g.startRot)
 
 	var afterLoop []*Animation
 	for _, animation := range g.activeAnimations {
@@ -215,24 +250,20 @@ func (g *Game) findInventorySlot() bool {
 	slot := g.pointInWhichCircle(float32(mouseX), float32(mouseY))
 	if slot != -1 {
 		if ticket := g.stats.CheckTicket(slot); ticket != nil {
-			asset := ebiten.NewImage(winnerTicketAsset.Bounds().Size().X,winnerTicketAsset.Bounds().Size().Y)
+			asset := ebiten.NewImage(winnerTicketAsset.Bounds().Size().X, winnerTicketAsset.Bounds().Size().Y)
+			ticketAsset := TicketAssets[ticket.Name]
 			// asset := winnerTicketAsset
-			size := asset.Bounds().Size()
-			
+
 			doptions := &ebiten.DrawImageOptions{}
-			doptions.GeoM.Scale(130.0/float64(size.X), 120.0/float64(size.Y))
+			doptions.GeoM.Scale(251.9/float64(ticketAsset.Bounds().Dx()), 283.1/float64(ticketAsset.Bounds().Dy()))
 			// Move the image's center to the origin for rotation
 			centerX, centerY := float64(asset.Bounds().Dx())/2, float64(asset.Bounds().Dy())/2
 			doptions.GeoM.Translate(-centerX, -centerY)
 			// Rotate the image anti-clockwise by 90 degrees (π/2 radians)
-			doptions.GeoM.Rotate(-(48*math.Pi / 180))
+			doptions.GeoM.Rotate(-(45.3 * math.Pi / 180))
 			// Move the image back from the origin to its original position plus any desired offset
-			doptions.GeoM.Translate(centerX, centerY)
+			doptions.GeoM.Translate(73.2+centerX, 7.7+centerY)
 
-			doptions.GeoM.Translate(70, 20)
-			
-			
-			ticketAsset := TicketAssets[ticket.Name]
 			asset.DrawImage(ticketAsset, doptions)
 			asset.DrawImage(winnerTicketAsset, &ebiten.DrawImageOptions{})
 

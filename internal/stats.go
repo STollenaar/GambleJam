@@ -6,6 +6,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/stollenaar/gamblingjam/util"
 )
 
 var (
@@ -57,6 +58,7 @@ func (s *Stats) CheckTicket(slot int) (t *Ticket) {
 		s.money += game.(*TicketGame).Win
 		// Play winning sounds/graphics
 		fmt.Printf("You won: %s, $%d\n", game.(*TicketGame).Prize, game.(*TicketGame).Win)
+		go util.PlayMP3("assets/wahoo.mp3")
 		s.drawWinnner = true
 		t = ticket.(*Ticket)
 	} else {

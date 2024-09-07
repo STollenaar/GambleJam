@@ -9,14 +9,16 @@ type Input int
 
 const (
 	KeyNone Input = iota
-	KeyDefaultOrGraveyard
-	KeyOpponentOrGraveyard
-	KeyGraveyard
 	KeyLeft
 	KeyRight
 	KeyUp
 	KeyDown
-	KeyQuit
+	KeyW
+	KeyS
+	KeyA
+	KeyD
+	KeyF
+	KeyG
 )
 
 type InputHandler interface {
@@ -35,24 +37,38 @@ func NewKBHandler() *KeyboardHandler {
 
 	go func(i KeyboardHandler) {
 		for ih.Pooling() {
-			if inpututil.IsKeyJustPressed(ebiten.KeyEnter) {
-				ch <- KeyDefaultOrGraveyard
-			}
-			if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
-				ch <- KeyOpponentOrGraveyard
-			}
-			if inpututil.IsKeyJustPressed(ebiten.KeyG) {
-				ch <- KeyGraveyard
-			}
 			if inpututil.IsKeyJustPressed(ebiten.KeyLeft) {
 				ch <- KeyLeft
 			}
 			if inpututil.IsKeyJustPressed(ebiten.KeyRight) {
 				ch <- KeyRight
 			}
-			if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
-				ch <- KeyQuit
+			if inpututil.IsKeyJustPressed(ebiten.KeyUp) {
+				ch <- KeyUp
 			}
+			if inpututil.IsKeyJustPressed(ebiten.KeyDown) {
+				ch <- KeyDown
+			}
+
+			if inpututil.IsKeyJustPressed(ebiten.KeyW) {
+				ch <- KeyW
+			}
+			if inpututil.IsKeyJustPressed(ebiten.KeyS) {
+				ch <- KeyS
+			}
+			if inpututil.IsKeyJustPressed(ebiten.KeyA) {
+				ch <- KeyA
+			}
+			if inpututil.IsKeyJustPressed(ebiten.KeyD) {
+				ch <- KeyD
+			}
+			if inpututil.IsKeyJustPressed(ebiten.KeyF) {
+				ch <- KeyF
+			}
+			if inpututil.IsKeyJustPressed(ebiten.KeyG) {
+				ch <- KeyG
+			}
+			
 		}
 	}(ih)
 
