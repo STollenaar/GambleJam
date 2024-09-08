@@ -13,17 +13,20 @@ import (
 type Home struct {
 	family     []*Member
 	totalBills int
+
+	isBuyingFood    bool
+	isBuyingHeating bool
 }
 
 func (h *Home) UpdateMembers() {
 	for _, member := range h.family {
-		member.doUpdate()
+		member.doUpdate(h.isBuyingFood, h.isBuyingHeating)
 	}
 }
 
 func (h *Home) Draw(screen *ebiten.Image, savings int) (activeButtons []*util.Button) {
 	h.drawMemberStats(screen)
-	h.drawUtilities(screen, savings)
+	activeButtons = append(activeButtons, h.drawUtilities(screen, savings)...)
 	activeButtons = append(activeButtons, h.drawSleepButton(screen), h.drawStoreButton(screen))
 	return activeButtons
 }
@@ -39,7 +42,7 @@ func (h *Home) drawMemberStats(screen *ebiten.Image) {
 		} else if member.warmth <= 5 {
 			conditions = append(conditions, "Cold")
 		} else if member.warmth <= 7 {
-			conditions = append(conditions, "Chill")
+			conditions = append(conditions, "Chilly")
 		}
 		if member.sick {
 			conditions = append(conditions, "Sick")
@@ -76,7 +79,11 @@ func (h *Home) drawMemberStats(screen *ebiten.Image) {
 			circleX := x
 			circleY := float32(y) - float32(circleRadius) - float32(10) // Position circles above the text
 
-			vector.DrawFilledCircle(screen, float32(circleX)+float32(i)*(float32(circleRadius)*2), circleY, float32(circleRadius), color.RGBA{50, 50, 50, 255}, false)
+			circleColor := color.RGBA{50, 50, 50, 255}
+			if condition == "Dead" {
+				circleColor = color.RGBA{204, 46, 46, 255}
+			}
+			vector.DrawFilledCircle(screen, float32(circleX)+float32(i)*(float32(circleRadius)*2), circleY, float32(circleRadius), circleColor, false)
 
 			// Calculate position to center the text inside the circle
 			textX := float64(circleX) + float64(i)*(circleRadius*2) - conditionWidth/2
@@ -88,47 +95,73 @@ func (h *Home) drawMemberStats(screen *ebiten.Image) {
 			op.ColorScale.ScaleWithColor(color.White)
 			text.Draw(screen, condition, util.DefaultFont, op)
 		}
+		i++
 	}
 }
 
-func (h *Home) drawUtilities(screen *ebiten.Image, money int) {
+func (h *Home) drawUtilities(screen *ebiten.Image, money int) (activeButtons []*util.Button) {
 	var totalBills int
+
 	moneyText := util.DrawText(screen, 300, 230, color.White, "SAVINGS:")
 	util.DrawText(screen, 500, float64(moneyText.Y), color.White, fmt.Sprintf("$%d", money))
 
-	mortgageText := util.DrawText(screen, 300, float64(moneyText.Y+moneyText.Height), color.RGBA{204, 46, 46, 255}, "MORTGAGE:")
+	mortgageText := util.DrawText(screen, 300, float64(moneyText.Y+moneyText.Height)+2, color.RGBA{204, 46, 46, 255}, "MORTGAGE:")
 	util.DrawText(screen, 500, float64(mortgageText.Y), color.RGBA{204, 46, 46, 255}, fmt.Sprintf("- $%d", 80))
-
 	totalBills += 80
-	foodText := util.DrawText(screen, 300, float64(mortgageText.Y+mortgageText.Height), color.RGBA{204, 46, 46, 255}, "FOOD:")
-	foodAmount := util.DrawText(screen, 500, float64(foodText.Y), color.RGBA{204, 46, 46, 255}, fmt.Sprintf("- $%d", 30))
-	vector.DrawFilledCircle(screen, foodAmount.X+foodAmount.Width+50, foodAmount.Y+foodAmount.Height/2, float32(10), color.RGBA{50, 50, 50, 255}, false)
 
-	totalBills += 30
-	heatingText := util.DrawText(screen, 300, float64(foodText.Y+foodText.Height), color.RGBA{204, 46, 46, 255}, "HEATING:")
-	heatingAmount := util.DrawText(screen, 500, float64(heatingText.Y), color.RGBA{204, 46, 46, 255}, fmt.Sprintf("- $%d", 30))
+	foodText := util.DrawText(screen, 300, float64(mortgageText.Y+mortgageText.Height)+2, util.SelectActiveColor(h.isBuyingFood), "FOOD:")
+	foodAmount := util.DrawText(screen, 500, float64(foodText.Y), util.SelectActiveColor(h.isBuyingFood), fmt.Sprintf("- $%d", 30))
+	vector.DrawFilledCircle(screen, foodAmount.X+foodAmount.Width+50, foodAmount.Y+foodAmount.Height/2, float32(10), util.SelectActiveColor(h.isBuyingFood), false)
+	activeButtons = append(activeButtons, &util.Button{
+		Name:   "food",
+		X:      foodAmount.X + foodAmount.Width + 50,
+		Y:      foodAmount.Y + foodAmount.Height/2,
+		Radius: 10,
+	})
 
-	vector.DrawFilledCircle(screen, heatingAmount.X+heatingAmount.Width+50, heatingAmount.Y+heatingAmount.Height/2, float32(10), color.RGBA{50, 50, 50, 255}, false)
+	if h.isBuyingFood {
+		totalBills += 30
+	}
 
-	totalBills += 30
+	heatingText := util.DrawText(screen, 300, float64(foodText.Y+foodText.Height)+2, util.SelectActiveColor(h.isBuyingHeating), "HEATING:")
+	heatingAmount := util.DrawText(screen, 500, float64(heatingText.Y), util.SelectActiveColor(h.isBuyingHeating), fmt.Sprintf("- $%d", 30))
+	vector.DrawFilledCircle(screen, heatingAmount.X+heatingAmount.Width+50, heatingAmount.Y+heatingAmount.Height/2, float32(10), util.SelectActiveColor(h.isBuyingHeating), false)
+	activeButtons = append(activeButtons, &util.Button{
+		Name:   "heating",
+		X:      heatingAmount.X + heatingAmount.Width + 50,
+		Y:      heatingAmount.Y + heatingAmount.Height/2,
+		Radius: 10,
+	})
+
+	if h.isBuyingHeating {
+		totalBills += 30
+	}
 
 	var offset int
 	previousText := heatingText
 	for _, member := range h.family {
 		if member.alive && member.sick {
-			previousText = util.DrawText(screen, 300, float64(previousText.Y+previousText.Height), color.RGBA{204, 46, 46, 255}, fmt.Sprintf("MEDICINE %s:", member.name))
-			previousAmount := util.DrawText(screen, 500, float64(previousText.Y), color.RGBA{204, 46, 46, 255}, fmt.Sprintf("- $%d", 10))
 
-			vector.DrawFilledCircle(screen, previousAmount.X+previousAmount.Width+50, previousAmount.Y+previousAmount.Height/2, float32(10), color.RGBA{50, 50, 50, 255}, false)
+			previousText = util.DrawText(screen, 300, float64(previousText.Y+previousText.Height)+2, util.SelectActiveColor(member.isBuyingMedicine), fmt.Sprintf("MEDICINE %s:", member.name))
+			previousAmount := util.DrawText(screen, 500, float64(previousText.Y), util.SelectActiveColor(member.isBuyingMedicine), fmt.Sprintf("- $%d", 10))
+			vector.DrawFilledCircle(screen, previousAmount.X+previousAmount.Width+50, previousAmount.Y+previousAmount.Height/2, float32(10), util.SelectActiveColor(member.isBuyingMedicine), false)
+			activeButtons = append(activeButtons, &util.Button{
+				Name:   member.name,
+				X:      previousAmount.X + previousAmount.Width + 50,
+				Y:      previousAmount.Y + previousAmount.Height/2,
+				Radius: 10,
+			})
 
 			offset += 1
-			totalBills += 10
+			if member.isBuyingMedicine {
+				totalBills += 10
+			}
 		}
 	}
-	remainingText := util.DrawText(screen, 300, float64(previousText.Y+previousText.Height+20), color.White, "REMAINING SAVINGS:")
+	remainingText := util.DrawText(screen, 300, float64(previousText.Y+previousText.Height+25), color.White, "REMAINING SAVINGS:")
 	util.DrawText(screen, 500, float64(remainingText.Y), color.White, fmt.Sprintf("$%d", money-totalBills))
 	h.totalBills = totalBills
-
+	return activeButtons
 }
 
 // Draw the sleep button

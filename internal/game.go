@@ -38,6 +38,7 @@ type Circle struct {
 }
 type Game struct {
 	currentPlace Place
+	isGameOver   bool
 
 	stats *Stats
 	input util.InputHandler
@@ -106,7 +107,7 @@ func NewGame(input util.InputHandler) (*Game, error) {
 			day:       0,
 			inventory: make([]Item, 8),
 			home: &Home{
-				family:      members,
+				family: members,
 			},
 			store: &Store{},
 		},
@@ -119,6 +120,10 @@ func NewGame(input util.InputHandler) (*Game, error) {
 
 // Draw implements ebiten.Game.
 func (g *Game) Draw(screen *ebiten.Image) {
+	if g.isGameOver {
+		util.DrawText(screen, 200,200, util.SelectActiveColor(true), "GAME OVER")
+		return
+	}
 	// Draw end of day information
 	util.DrawCenteredTextInRect(screen, 340, 20, color.RGBA{50, 50, 50, 255}, color.White, fmt.Sprintf("DAY %d", g.stats.day+1))
 
@@ -142,6 +147,9 @@ func (g *Game) Layout(outsideWidth int, outsideHeight int) (screenWidth int, scr
 
 // Update implements ebiten.Game.
 func (g *Game) Update() error {
+	if g.isGameOver {
+		return nil
+	}
 
 	switch key := g.kbHandler.Read(); key {
 	case util.KeyA:
@@ -191,8 +199,21 @@ func (g *Game) Update() error {
 	if !isBlocking {
 		g.HandleButtons()
 	}
+	if g.stats.money < 3 && g.hasEmptyInventory() {
+		// Game over
+		g.isGameOver = true
+	}
 
 	return nil
+}
+
+func (g *Game) hasEmptyInventory() bool {
+	for _, i := range g.stats.inventory {
+		if i != nil {
+			return false
+		}
+	}
+	return true
 }
 
 func (g *Game) HandleButtons() bool {
@@ -200,15 +221,27 @@ func (g *Game) HandleButtons() bool {
 		if button := g.isMouseWithinButtons(); button != nil {
 			switch g.currentPlace {
 			case HOME:
-				if button.Name == "STORE" {
+				switch button.Name {
+				case "STORE":
 					g.currentPlace = STORE
-					return true
-				} else if button.Name == "SLEEP" {
+				case "SLEEP":
 					g.stats.day++ // Advance to the next day
 					g.stats.home.UpdateMembers()
 					g.stats.money -= g.stats.home.totalBills
-					return true
+				case "food":
+					g.stats.home.isBuyingFood = !g.stats.home.isBuyingFood
+				case "heating":
+					g.stats.home.isBuyingHeating = !g.stats.home.isBuyingHeating
+				case "Wife":
+					g.stats.home.family[0].isBuyingMedicine = !g.stats.home.family[0].isBuyingMedicine
+				case "Son":
+					g.stats.home.family[1].isBuyingMedicine = !g.stats.home.family[1].isBuyingMedicine
+				case "Daugther":
+					g.stats.home.family[2].isBuyingMedicine = !g.stats.home.family[2].isBuyingMedicine
+				default:
+					return false
 				}
+				return true
 			case STORE:
 				if button.Name == "HOME" {
 					g.currentPlace = HOME
@@ -229,7 +262,9 @@ func (g *Game) HandleButtons() bool {
 
 func (g *Game) isMouseWithinButtons() *util.Button {
 	for _, button := range g.activeButtons {
-		if g.isMouseWithinButton(button) {
+		if button.Width != 0 && button.Height != 0 && g.isMouseWithinSquareButton(button) {
+			return button
+		} else if button.Radius != 0 && g.isMouseWithinCircleButton(button) {
 			return button
 		}
 	}
@@ -237,7 +272,13 @@ func (g *Game) isMouseWithinButtons() *util.Button {
 }
 
 // Check if the mouse click is within the button's bounds
-func (g *Game) isMouseWithinButton(button *util.Button) bool {
+func (g *Game) isMouseWithinCircleButton(button *util.Button) bool {
+	mouseX, mouseY := ebiten.CursorPosition()
+	return distance(float32(mouseX), float32(mouseY), button.X, button.Y) < button.Radius
+}
+
+// Check if the mouse click is within the button's bounds
+func (g *Game) isMouseWithinSquareButton(button *util.Button) bool {
 	mouseX, mouseY := ebiten.CursorPosition()
 	return float32(mouseX) >= button.X && float32(mouseX) <= button.X+button.Width &&
 		float32(mouseY) >= button.Y && float32(mouseY) <= button.Y+button.Height
@@ -297,7 +338,7 @@ func (g *Game) findInventorySlot() bool {
 				isBlocking:  true,
 				effect: &Effect{
 					name:     "fadeout",
-					duration: 2,
+					duration: 4,
 				},
 			})
 		}

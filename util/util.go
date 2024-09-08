@@ -112,3 +112,10 @@ func DrawText(screen *ebiten.Image, x, y float64, textColor color.Color, message
 		Height: float32(textHeight),
 	}
 }
+
+func SelectActiveColor(b bool) color.RGBA {
+	if b {
+		return activeColor
+	}
+	return inactiveColor
+}

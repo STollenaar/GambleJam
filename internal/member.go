@@ -3,38 +3,54 @@ package internal
 import "math/rand/v2"
 
 type Member struct {
-	alive  bool
-	sick   bool
-	name   string
-	health int
-	hunger int
-	warmth int
+	alive            bool
+	sick             bool
+	isBuyingMedicine bool
+	name             string
+	health           int
+	hunger           int
+	warmth           int
 }
 
-func (m *Member) doUpdate() bool {
+func (m *Member) doUpdate(food, warmth bool) bool {
 	if !m.alive {
 		return false
 	}
-	m.hunger--
-	m.warmth--
+	if food {
+		m.hunger += 2
+	} else {
+		m.hunger--
+	}
+	if warmth {
+		m.warmth += 2
+	} else {
+		m.warmth--
+	}
 
-	if m.warmth <= 7 {
+	if !food && m.warmth <= 7 {
 		m.hunger--
 	}
 
-	if m.hunger <= 5 || m.warmth <= 5 {
+	if !food && !warmth && (m.hunger <= 5 || m.warmth <= 5) {
 		m.health--
 
 		if !m.sick {
 			m.sick = doSickRoll(m.hunger + m.warmth)
 		}
 	}
-	if !m.sick {
+	if m.isBuyingMedicine {
+		m.sick = false
+		m.isBuyingMedicine = false
+	}
+	if m.sick {
 		m.health--
 	}
 
 	if m.health <= 0 {
 		m.alive = false
+	}
+	if m.alive && food && warmth && !m.sick {
+		m.health++
 	}
 	return m.alive
 }

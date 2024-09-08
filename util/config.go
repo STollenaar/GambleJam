@@ -2,7 +2,9 @@ package util
 
 import (
 	"bytes"
+	_ "embed"
 	"encoding/json"
+	"image/color"
 	"log"
 	"os"
 
@@ -16,6 +18,7 @@ type Button struct {
 	Y      float32 `json:"y"`
 	Width  float32 `json:"width"`
 	Height float32 `json:"height"`
+	Radius float32 `json:"radius"`
 }
 
 type Config struct {
@@ -28,10 +31,15 @@ type Config struct {
 }
 
 var (
+	inactiveColor = color.RGBA{80, 80, 80, 255}
+	activeColor   = color.RGBA{204, 46, 46, 255}
+)
+
+var (
 	ConfigFile *Config
 
 	DefaultFont *text.GoTextFace
-	TitleFont *text.GoTextFace
+	TitleFont   *text.GoTextFace
 )
 
 func init() {
@@ -45,19 +53,39 @@ func init() {
 		log.Fatal(err)
 	}
 
-			// Define font
-			s, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.MPlus1pRegular_ttf))
-			if err != nil {
-				log.Fatal(err)
-			}
-	
-			DefaultFont = &text.GoTextFace{
-				Source: s,
-				Size:   15,
-			}
-			TitleFont = &text.GoTextFace{
-				Source: s,
-				Size:   30,
-			}
-	
+	// Define font
+	s, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.MPlus1pRegular_ttf))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+
+	// handjet, err := os.ReadFile("./assets/fonts/Handjet.ttf")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// handjetSource, err := text.NewGoTextFaceSource(bytes.NewReader(handjet))
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	unifraktur, err := os.ReadFile("./assets/fonts/UnifrakturMaguntia.ttf")
+	if err != nil {
+		log.Fatal(err)
+	}
+	unifrakturSource, err := text.NewGoTextFaceSource(bytes.NewReader(unifraktur))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+
+	DefaultFont = &text.GoTextFace{
+		Source: s,
+		Size:   15,
+	}
+	TitleFont = &text.GoTextFace{
+		Source: unifrakturSource,
+		Size:   30,
+	}
+
 }
