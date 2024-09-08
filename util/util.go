@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/hajimehoshi/go-mp3"
 	"github.com/hajimehoshi/oto"
@@ -64,4 +65,50 @@ func PlayMP3(path string) error {
 	}
 
 	return nil
+}
+
+// Draw a rectangle with centered text at (x, y), with the rectangle size dependent on the text size
+func DrawCenteredTextInRect(screen *ebiten.Image, x, y float32, rectColor color.Color, textColor color.Color, message string) *Button {
+
+	// Measure the text size
+	textWidth, textHeight := text.Measure(message, DefaultFont, 0)
+
+	// Calculate rectangle dimensions based on text size and margin
+	rectWidth := float32(textWidth) + 2*ConfigFile.Margin
+	rectHeight := float32(textHeight) + 2*ConfigFile.Margin
+
+	// Draw the rectangle
+	vector.DrawFilledRect(screen, x, y, rectWidth, rectHeight, rectColor, false)
+
+	// Calculate the position to center the text within the rectangle
+	textX := x + ConfigFile.Margin
+	textY := y + ConfigFile.Margin 
+
+	op := &text.DrawOptions{}
+	op.GeoM.Translate(float64(textX), float64(textY))
+	op.ColorScale.ScaleWithColor(textColor)
+	// Draw the text at the calculated position (centered)
+	text.Draw(screen, message, DefaultFont, op)
+	return &Button{
+		Name:   message,
+		X:      x,
+		Y:      y,
+		Width:  rectWidth,
+		Height: rectHeight,
+	}
+}
+
+func DrawText(screen *ebiten.Image, x, y float64, textColor color.Color, message string) *Button {
+	op := &text.DrawOptions{}
+	op.GeoM.Translate(x, y)
+	op.ColorScale.ScaleWithColor(textColor)
+	textWidth, textHeight := text.Measure(message, DefaultFont, 0)
+	text.Draw(screen, message, DefaultFont, op)
+	return &Button{
+		Name:   message,
+		X:      float32(x),
+		Y:      float32(y),
+		Width:  float32(textWidth),
+		Height: float32(textHeight),
+	}
 }

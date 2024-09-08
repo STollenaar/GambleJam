@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"image/color"
 	"math"
-	"math/rand/v2"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/stollenaar/gamblingjam/util"
@@ -32,6 +30,7 @@ type Animation struct {
 	drawOptions *ebiten.DrawImageOptions
 	startTime   time.Time
 	effect      *Effect
+	isBlocking  bool
 }
 
 type Circle struct {
@@ -45,6 +44,7 @@ type Game struct {
 
 	inventorySlotLocations []Circle
 	activeAnimations       []*Animation
+	activeButtons          []*util.Button
 
 	startX, startY, startWidth, startHeight, startRot float64
 
@@ -65,20 +65,24 @@ func NewGame(input util.InputHandler) (*Game, error) {
 			hunger: 10,
 			warmth: 10,
 		},
-	}
-
-	r := rand.IntN(4) + 1
-
-	for ; r > 0; r-- {
-		members = append(members, &Member{
+		&Member{
 			alive:  true,
 			sick:   false,
 			name:   "Son",
 			health: 10,
 			hunger: 10,
 			warmth: 10,
-		})
+		},
+		&Member{
+			alive:  true,
+			sick:   false,
+			name:   "Daugther",
+			health: 10,
+			hunger: 10,
+			warmth: 10,
+		},
 	}
+
 	var circles []Circle
 	radius := 30
 
@@ -91,18 +95,17 @@ func NewGame(input util.InputHandler) (*Game, error) {
 	}
 
 	return &Game{
-		currentPlace: STORE,
+		currentPlace: HOME,
 		startX:       73.2,
 		startY:       7.7,
 		startWidth:   251.9,
 		startHeight:  283.1,
-		startRot: 45.3,
+		startRot:     45.3,
 		stats: &Stats{
 			money:     util.ConfigFile.StartingMoney,
 			day:       0,
 			inventory: make([]Item, 8),
 			home: &Home{
-				hasMedicine: false,
 				family:      members,
 			},
 			store: &Store{},
@@ -117,14 +120,15 @@ func NewGame(input util.InputHandler) (*Game, error) {
 // Draw implements ebiten.Game.
 func (g *Game) Draw(screen *ebiten.Image) {
 	// Draw end of day information
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("DAY %d", g.stats.day+1), 340, 20)
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("SAVINGS $%d", g.stats.money), 340, 500)
+	util.DrawCenteredTextInRect(screen, 340, 20, color.RGBA{50, 50, 50, 255}, color.White, fmt.Sprintf("DAY %d", g.stats.day+1))
+
 	g.drawInventory(screen)
 	switch g.currentPlace {
 	case HOME:
-		g.stats.home.Draw(screen)
+		g.activeButtons = g.stats.home.Draw(screen, g.stats.money)
 	case STORE:
-		g.stats.store.Draw(screen)
+		util.DrawCenteredTextInRect(screen, 340, 489, color.RGBA{50, 50, 50, 255}, color.White, fmt.Sprintf("SAVINGS $%d", g.stats.money))
+		g.activeButtons = g.stats.store.Draw(screen)
 	}
 	for _, animation := range g.activeAnimations {
 		screen.DrawImage(animation.image, animation.drawOptions)
@@ -138,37 +142,39 @@ func (g *Game) Layout(outsideWidth int, outsideHeight int) (screenWidth int, scr
 
 // Update implements ebiten.Game.
 func (g *Game) Update() error {
-	g.HandleButtons()
 
 	switch key := g.kbHandler.Read(); key {
 	case util.KeyA:
-		g.startWidth-=0.1
+		g.startWidth -= 0.1
 	case util.KeyD:
-		g.startWidth+=0.1
+		g.startWidth += 0.1
 	case util.KeyW:
-		g.startHeight+=0.1
+		g.startHeight += 0.1
 	case util.KeyS:
-		g.startHeight-=0.1
+		g.startHeight -= 0.1
 	case util.KeyUp:
-		g.startY+=0.1
+		g.startY += 0.1
 	case util.KeyDown:
-		g.startY-=0.1
+		g.startY -= 0.1
 	case util.KeyLeft:
-		g.startX-=0.1
+		g.startX -= 0.1
 	case util.KeyRight:
-		g.startX+=0.1
+		g.startX += 0.1
 	case util.KeyF:
-		g.startRot-=0.1
+		g.startRot -= 0.1
 	case util.KeyG:
-		g.startRot+=0.1
+		g.startRot += 0.1
 	}
 
 	// fmt.Printf("startWidth: %v, startHeight: %v, startX: %v, startY: %v, startRot: %v\n", g.startWidth, g.startHeight, g.startX, g.startY, g.startRot)
-
+	var isBlocking bool
 	var afterLoop []*Animation
 	for _, animation := range g.activeAnimations {
 		if time.Since(animation.startTime).Seconds() >= animation.effect.duration && !animation.effect.active {
 			animation.effect.active = true
+		}
+		if animation.isBlocking {
+			isBlocking = true
 		}
 		if animation.effect.active {
 			switch animation.effect.name {
@@ -182,44 +188,59 @@ func (g *Game) Update() error {
 		afterLoop = append(afterLoop, animation)
 	}
 	g.activeAnimations = afterLoop
+	if !isBlocking {
+		g.HandleButtons()
+	}
+
 	return nil
 }
 
 func (g *Game) HandleButtons() bool {
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-		if g.isMouseWithinButton(util.ConfigFile.Buttons["sleep"]) {
+		if button := g.isMouseWithinButtons(); button != nil {
 			switch g.currentPlace {
 			case HOME:
-				g.stats.day++ // Advance to the next day
-				g.stats.home.UpdateMembers()
+				if button.Name == "STORE" {
+					g.currentPlace = STORE
+					return true
+				} else if button.Name == "SLEEP" {
+					g.stats.day++ // Advance to the next day
+					g.stats.home.UpdateMembers()
+					g.stats.money -= g.stats.home.totalBills
+					return true
+				}
 			case STORE:
+				if button.Name == "HOME" {
+					g.currentPlace = HOME
+					return true
+				}
 			}
+		}
+
+		switch {
+		case g.stats.HandleButtons(g.currentPlace):
 			return true
-		} else if g.isMouseWithinButton(util.ConfigFile.Buttons["store"]) {
-			switch g.currentPlace {
-			case HOME:
-				g.currentPlace = STORE
-			case STORE:
-				g.currentPlace = HOME
-			}
+		case g.findInventorySlot():
 			return true
-		} else {
-			switch {
-			case g.stats.HandleButtons(g.currentPlace):
-				return true
-			case g.findInventorySlot():
-				return true
-			}
 		}
 	}
 	return false
 }
 
+func (g *Game) isMouseWithinButtons() *util.Button {
+	for _, button := range g.activeButtons {
+		if g.isMouseWithinButton(button) {
+			return button
+		}
+	}
+	return nil
+}
+
 // Check if the mouse click is within the button's bounds
 func (g *Game) isMouseWithinButton(button *util.Button) bool {
 	mouseX, mouseY := ebiten.CursorPosition()
-	return mouseX >= button.X && mouseX <= button.X+button.Width &&
-		mouseY >= button.Y && mouseY <= button.Y+button.Height
+	return float32(mouseX) >= button.X && float32(mouseX) <= button.X+button.Width &&
+		float32(mouseY) >= button.Y && float32(mouseY) <= button.Y+button.Height
 }
 
 // Function to draw the inventory section at the bottom of the screen
@@ -273,6 +294,7 @@ func (g *Game) findInventorySlot() bool {
 				image:       asset,
 				drawOptions: op,
 				startTime:   time.Now(),
+				isBlocking:  true,
 				effect: &Effect{
 					name:     "fadeout",
 					duration: 2,

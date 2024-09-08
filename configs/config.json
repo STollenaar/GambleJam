@@ -2,18 +2,15 @@
     "startingMoney": 10000,
     "screenWidth": 800,
     "screenHeight": 600,
+    "margin": 5,
     "buttons": {
         "sleep": {
-            "x": 720,
-            "y": 490,
-            "width": 80,
-            "height": 30
+            "x": 747,
+            "y": 489
         },
         "store": {
             "x": 0,
-            "y": 490,
-            "width": 80,
-            "height": 30
+            "y": 489
         }
     }
 }

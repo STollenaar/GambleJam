@@ -4,7 +4,6 @@ import (
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/stollenaar/gamblingjam/util"
 )
@@ -13,10 +12,10 @@ type Store struct {
 	cart []*Ticket
 }
 
-func (s *Store) Draw(screen *ebiten.Image) {
+func (s *Store) Draw(screen *ebiten.Image) (activeButtons []*util.Button) {
 	s.drawDisplayCase(screen)
-	s.drawHomeButton(screen)
-	s.drawPlayButton(screen)
+	activeButtons = append(activeButtons, s.drawHomeButton(screen), s.drawPlayButton(screen))
+	return activeButtons
 }
 
 // Draw tickets in store
@@ -41,19 +40,17 @@ func (s *Store) drawDisplayCase(screen *ebiten.Image) {
 }
 
 // Draw the play button
-func (s *Store) drawPlayButton(screen *ebiten.Image) {
+func (s *Store) drawPlayButton(screen *ebiten.Image) *util.Button {
 	buttonColor := color.RGBA{50, 50, 50, 255} // Dark grey color for the button
 	sleepButton := util.ConfigFile.Buttons["sleep"]
-	vector.DrawFilledRect(screen, float32(sleepButton.X), float32(sleepButton.Y), float32(sleepButton.Width), float32(sleepButton.Height), buttonColor, false)
-	ebitenutil.DebugPrintAt(screen, "PLAY", sleepButton.X+10, sleepButton.Y+10) // Text centered within the button
+	return util.DrawCenteredTextInRect(screen, float32(sleepButton.X), float32(sleepButton.Y), buttonColor, color.White, "PLAY")
 }
 
 // Draw the home button
-func (s *Store) drawHomeButton(screen *ebiten.Image) {
+func (s *Store) drawHomeButton(screen *ebiten.Image) *util.Button {
 	buttonColor := color.RGBA{50, 50, 50, 255} // Dark grey color for the button
 	storeButton := util.ConfigFile.Buttons["store"]
-	vector.DrawFilledRect(screen, float32(storeButton.X), float32(storeButton.Y), float32(storeButton.Width), float32(storeButton.Height), buttonColor, false)
-	ebitenutil.DebugPrintAt(screen, "HOME", storeButton.X+10, storeButton.Y+10) // Text centered within the button
+	return util.DrawCenteredTextInRect(screen, float32(storeButton.X), float32(storeButton.Y), buttonColor, color.White, "HOME")
 }
 
 func (s *Store) FindTicket() *Ticket {
