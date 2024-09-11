@@ -48,7 +48,7 @@ type Game struct {
 	activeAnimations       []*Animation
 	activeButtons          []*util.Button
 
-	startX, startY, startWidth, startHeight, startRot float64
+	Red, Green, Blue, Alpha uint8
 
 	kbHandler *util.KeyboardHandler
 }
@@ -99,11 +99,6 @@ func NewGame(input util.InputHandler) (*Game, error) {
 	return &Game{
 		currentPlace:       HOME,
 		isDrawingNewsPaper: true,
-		startX:             73.2,
-		startY:             7.7,
-		startWidth:         251.9,
-		startHeight:        283.1,
-		startRot:           45.3,
 		stats: &Stats{
 			money:     util.ConfigFile.StartingMoney,
 			day:       0,
@@ -138,10 +133,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.drawInventory(screen)
 	switch g.currentPlace {
 	case HOME:
-		g.activeButtons = g.stats.home.Draw(screen, g.stats.money)
+		g.activeButtons = g.stats.home.Draw(screen, g.stats.money, g.stats.time)
 	case STORE:
 		util.DrawCenteredTextInRect(screen, 340, 489, color.RGBA{50, 50, 50, 255}, color.White, fmt.Sprintf("SAVINGS $%d", g.stats.money))
-		g.activeButtons = g.stats.store.Draw(screen)
+		g.activeButtons = g.stats.store.Draw(screen, g.stats.time)
 	}
 	for _, animation := range g.activeAnimations {
 		screen.DrawImage(animation.image, animation.drawOptions)
@@ -164,30 +159,30 @@ func (g *Game) Update() error {
 		return nil
 	}
 
-	switch key := g.kbHandler.Read(); key {
-	case util.KeyA:
-		g.startWidth -= 0.1
-	case util.KeyD:
-		g.startWidth += 0.1
-	case util.KeyW:
-		g.startHeight += 0.1
-	case util.KeyS:
-		g.startHeight -= 0.1
-	case util.KeyUp:
-		g.startY += 0.1
-	case util.KeyDown:
-		g.startY -= 0.1
-	case util.KeyLeft:
-		g.startX -= 0.1
-	case util.KeyRight:
-		g.startX += 0.1
-	case util.KeyF:
-		g.startRot -= 0.1
-	case util.KeyG:
-		g.startRot += 0.1
-	}
+	// switch key := g.kbHandler.Read(); key {
+	// case util.KeyA:
+	// 	g.startWidth -= 0.1
+	// case util.KeyD:
+	// 	g.startWidth += 0.1
+	// case util.KeyW:
+	// 	g.startHeight += 0.1
+	// case util.KeyS:
+	// 	g.startHeight -= 0.1
+	// case util.KeyUp:
+	// 	g.startY += 0.1
+	// case util.KeyDown:
+	// 	g.startY -= 0.1
+	// case util.KeyLeft:
+	// 	g.startX -= 0.1
+	// case util.KeyRight:
+	// 	g.startX += 0.1
+	// case util.KeyF:
+	// 	g.startRot -= 0.1
+	// case util.KeyG:
+	// 	g.startRot += 0.1
+	// }
 
-	// fmt.Printf("startWidth: %v, startHeight: %v, startX: %v, startY: %v, startRot: %v\n", g.startWidth, g.startHeight, g.startX, g.startY, g.startRot)
+	// fmt.Printf("Grey: %v, Alpha: %v\n", g.stats.store.Grey, g.stats.store.Alpha)
 	var isBlocking bool
 	var afterLoop []*Animation
 	for _, animation := range g.activeAnimations {
@@ -236,8 +231,10 @@ func (g *Game) HandleButtons() bool {
 			case HOME:
 				switch button.Name {
 				case "STORE":
-					g.currentPlace = STORE
-					g.stats.advanceTime(time.Hour)
+					if g.stats.time.Hour() < 21 {
+						g.currentPlace = STORE
+						g.stats.advanceTime(time.Hour)
+					}
 				case "SLEEP":
 					if g.stats.time.Hour() >= 19 {
 						g.stats.day++ // Advance to the next day

@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"image/color"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -24,10 +25,10 @@ func (h *Home) UpdateMembers() {
 	}
 }
 
-func (h *Home) Draw(screen *ebiten.Image, savings int) (activeButtons []*util.Button) {
+func (h *Home) Draw(screen *ebiten.Image, savings int, time time.Time) (activeButtons []*util.Button) {
 	h.drawMemberStats(screen)
 	activeButtons = append(activeButtons, h.drawUtilities(screen, savings)...)
-	activeButtons = append(activeButtons, h.drawSleepButton(screen), h.drawStoreButton(screen))
+	activeButtons = append(activeButtons, h.drawSleepButton(screen), h.drawStoreButton(screen, time))
 	return activeButtons
 }
 
@@ -102,20 +103,20 @@ func (h *Home) drawMemberStats(screen *ebiten.Image) {
 func (h *Home) drawUtilities(screen *ebiten.Image, money int) (activeButtons []*util.Button) {
 	var totalBills int
 
-	moneyText := util.DrawText(screen, 300, 230, color.White, "SAVINGS:",nil)
-	util.DrawText(screen, 500, float64(moneyText.Y)-22, color.White, fmt.Sprintf("$%d", money),nil)
+	moneyText := util.DrawText(screen, 300, 230, color.White, "SAVINGS:", nil)
+	util.DrawText(screen, 500, float64(moneyText.Y)-22, color.White, fmt.Sprintf("$%d", money), nil)
 
-	mortgageText := util.DrawText(screen, 300, float64(moneyText.Y+moneyText.Height)+2, color.RGBA{204, 46, 46, 255}, "MORTGAGE:",nil)
-	util.DrawText(screen, 500, float64(mortgageText.Y)-22, color.RGBA{204, 46, 46, 255}, fmt.Sprintf("- $%d", 80),nil)
+	mortgageText := util.DrawText(screen, 300, float64(moneyText.Y+moneyText.Height)+2, color.RGBA{204, 46, 46, 255}, "MORTGAGE:", nil)
+	util.DrawText(screen, 500, float64(mortgageText.Y)-22, color.RGBA{204, 46, 46, 255}, fmt.Sprintf("- $%d", 80), nil)
 	totalBills += 80
 
-	foodText := util.DrawText(screen, 300, float64(mortgageText.Y+mortgageText.Height)+2, util.SelectActiveColor(h.isBuyingFood), "FOOD:",nil)
-	foodAmount := util.DrawText(screen, 500, float64(foodText.Y)-22, util.SelectActiveColor(h.isBuyingFood), fmt.Sprintf("- $%d", 30),nil)
+	foodText := util.DrawText(screen, 300, float64(mortgageText.Y+mortgageText.Height)+2, util.SelectActiveColor(h.isBuyingFood), "FOOD:", nil)
+	foodAmount := util.DrawText(screen, 500, float64(foodText.Y)-22, util.SelectActiveColor(h.isBuyingFood), fmt.Sprintf("- $%d", 30), nil)
 	vector.DrawFilledCircle(screen, foodAmount.X+foodAmount.Width+50, foodAmount.Y-20+foodAmount.Height/2, float32(10), util.SelectActiveColor(h.isBuyingFood), false)
 	activeButtons = append(activeButtons, &util.Button{
 		Name:   "food",
 		X:      foodAmount.X + foodAmount.Width + 50,
-		Y:      foodAmount.Y -20+ foodAmount.Height/2,
+		Y:      foodAmount.Y - 20 + foodAmount.Height/2,
 		Radius: 10,
 	})
 
@@ -123,13 +124,13 @@ func (h *Home) drawUtilities(screen *ebiten.Image, money int) (activeButtons []*
 		totalBills += 30
 	}
 
-	heatingText := util.DrawText(screen, 300, float64(foodText.Y+foodText.Height)+2, util.SelectActiveColor(h.isBuyingHeating), "HEATING:",nil)
-	heatingAmount := util.DrawText(screen, 500, float64(heatingText.Y)-22, util.SelectActiveColor(h.isBuyingHeating), fmt.Sprintf("- $%d", 30),nil)
+	heatingText := util.DrawText(screen, 300, float64(foodText.Y+foodText.Height)+2, util.SelectActiveColor(h.isBuyingHeating), "HEATING:", nil)
+	heatingAmount := util.DrawText(screen, 500, float64(heatingText.Y)-22, util.SelectActiveColor(h.isBuyingHeating), fmt.Sprintf("- $%d", 30), nil)
 	vector.DrawFilledCircle(screen, heatingAmount.X+heatingAmount.Width+50, heatingAmount.Y-20+heatingAmount.Height/2, float32(10), util.SelectActiveColor(h.isBuyingHeating), false)
 	activeButtons = append(activeButtons, &util.Button{
 		Name:   "heating",
 		X:      heatingAmount.X + heatingAmount.Width + 50,
-		Y:      heatingAmount.Y-20 + heatingAmount.Height/2,
+		Y:      heatingAmount.Y - 20 + heatingAmount.Height/2,
 		Radius: 10,
 	})
 
@@ -142,13 +143,13 @@ func (h *Home) drawUtilities(screen *ebiten.Image, money int) (activeButtons []*
 	for _, member := range h.family {
 		if member.alive && member.sick {
 
-			previousText = util.DrawText(screen, 300, float64(previousText.Y+previousText.Height)+2, util.SelectActiveColor(member.isBuyingMedicine), fmt.Sprintf("MEDICINE %s:", member.name),nil)
-			previousAmount := util.DrawText(screen, 500, float64(previousText.Y)-22, util.SelectActiveColor(member.isBuyingMedicine), fmt.Sprintf("- $%d", 10),nil)
+			previousText = util.DrawText(screen, 300, float64(previousText.Y+previousText.Height)+2, util.SelectActiveColor(member.isBuyingMedicine), fmt.Sprintf("MEDICINE %s:", member.name), nil)
+			previousAmount := util.DrawText(screen, 500, float64(previousText.Y)-22, util.SelectActiveColor(member.isBuyingMedicine), fmt.Sprintf("- $%d", 10), nil)
 			vector.DrawFilledCircle(screen, previousAmount.X+previousAmount.Width+50, previousAmount.Y-20+previousAmount.Height/2, float32(10), util.SelectActiveColor(member.isBuyingMedicine), false)
 			activeButtons = append(activeButtons, &util.Button{
 				Name:   member.name,
 				X:      previousAmount.X + previousAmount.Width + 50,
-				Y:      previousAmount.Y -20+ previousAmount.Height/2,
+				Y:      previousAmount.Y - 20 + previousAmount.Height/2,
 				Radius: 10,
 			})
 
@@ -158,8 +159,8 @@ func (h *Home) drawUtilities(screen *ebiten.Image, money int) (activeButtons []*
 			}
 		}
 	}
-	remainingText := util.DrawText(screen, 300, float64(previousText.Y+previousText.Height+25), color.White, "REMAINING SAVINGS:",nil)
-	util.DrawText(screen, 500, float64(remainingText.Y)-22, color.White, fmt.Sprintf("$%d", money-totalBills),nil)
+	remainingText := util.DrawText(screen, 300, float64(previousText.Y+previousText.Height+25), color.White, "REMAINING SAVINGS:", nil)
+	util.DrawText(screen, 500, float64(remainingText.Y)-22, color.White, fmt.Sprintf("$%d", money-totalBills), nil)
 	h.totalBills = totalBills
 	return activeButtons
 }
@@ -172,8 +173,16 @@ func (h *Home) drawSleepButton(screen *ebiten.Image) *util.Button {
 }
 
 // Draw the store button
-func (h *Home) drawStoreButton(screen *ebiten.Image) *util.Button {
+func (h *Home) drawStoreButton(screen *ebiten.Image, time time.Time) *util.Button {
 	buttonColor := color.RGBA{50, 50, 50, 255} // Dark grey color for the button
+	if time.Hour() >= 21 {
+		buttonColor = util.SelectActiveColor(true)
+	}
 	storeButton := util.ConfigFile.Buttons["store"]
-	return util.DrawCenteredTextInRect(screen, float32(storeButton.X), float32(storeButton.Y), buttonColor, color.White, "STORE")
+	button := util.DrawCenteredTextInRect(screen, float32(storeButton.X), float32(storeButton.Y), buttonColor, color.White, "STORE")
+	if time.Hour() >= 21 {
+		vector.StrokeLine(screen, float32(storeButton.X), float32(storeButton.Y), float32(storeButton.X)+button.Width, float32(storeButton.Y)+button.Height, 2.5, color.Black, false)
+		vector.StrokeLine(screen, float32(storeButton.X), float32(storeButton.Y)+button.Height, float32(storeButton.X)+button.Width, float32(storeButton.Y), 2.5, color.Black, false)
+	}
+	return button
 }

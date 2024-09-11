@@ -42,19 +42,6 @@ func init() {
 	winnerTicketAsset = igbm
 }
 
-func (s *Stats) CheckAllTickets() {
-	var totalWinning int
-
-	for index, ticket := range s.inventory {
-		if game := ticket.Interact(); game != nil {
-			totalWinning += game.(*TicketGame).Win
-			// Play winning sounds/graphics
-		}
-		s.inventory[index] = nil
-	}
-	s.money += totalWinning
-}
-
 func (s *Stats) CheckTicket(slot int) (t *Ticket) {
 	ticket := s.inventory[slot]
 	if ticket == nil {
@@ -78,6 +65,9 @@ func (s *Stats) CheckTicket(slot int) (t *Ticket) {
 func (s *Stats) HandleButtons(place Place) bool {
 	if place == STORE {
 		ticket := s.store.FindTicket()
+		if s.time.Hour() >= 21 {
+			return false
+		}
 
 		if ticket != nil && s.money >= ticket.Cost && s.findEmptySlot(ticket) {
 			s.money -= ticket.Cost

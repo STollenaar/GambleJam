@@ -2,6 +2,7 @@ package internal
 
 import (
 	"image/color"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -12,31 +13,34 @@ type Store struct {
 	cart []*Ticket
 }
 
-func (s *Store) Draw(screen *ebiten.Image) (activeButtons []*util.Button) {
-	s.drawDisplayCase(screen)
+func (s *Store) Draw(screen *ebiten.Image, time time.Time) (activeButtons []*util.Button) {
+	s.drawDisplayCase(screen, time)
 	activeButtons = append(activeButtons, s.drawHomeButton(screen), s.drawPlayButton(screen))
 	return activeButtons
 }
 
 // Draw tickets in store
-func (s *Store) drawDisplayCase(screen *ebiten.Image) {
+func (s *Store) drawDisplayCase(screen *ebiten.Image, time time.Time) {
 	vector.DrawFilledRect(screen, 10.0, 50.0, 660.0, 420.0, color.RGBA{255, 255, 255, 255}, false)
 	util.DrawClearRectangle(screen, color.RGBA{213, 43, 30, 255}, 10, 50, 660, 420, 10)
 	var xoff, yoff int
-	for _, name := range TicketNames {
-		ticket := TicketAssets[name]
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Scale(128.0/800.0, 200.0/900.0)
-		op.GeoM.Translate(float64(20+(128*xoff)), float64(60+(200*yoff)))
-		screen.DrawImage(ticket, &ebiten.DrawImageOptions{
-			GeoM: op.GeoM,
-		})
-		xoff++
-		if xoff == 5 {
-			xoff = 0
-			yoff++
+	if time.Hour() < 21 {
+		for _, name := range TicketNames {
+			ticket := TicketAssets[name]
+			op := &ebiten.DrawImageOptions{}
+			op.GeoM.Scale(128.0/800.0, 200.0/900.0)
+			op.GeoM.Translate(float64(20+(128*xoff)), float64(60+(200*yoff)))
+			screen.DrawImage(ticket, &ebiten.DrawImageOptions{
+				GeoM: op.GeoM,
+			})
+			xoff++
+			if xoff == 5 {
+				xoff = 0
+				yoff++
+			}
 		}
 	}
+	vector.DrawFilledRect(screen, 15, 55, 650, 410, color.RGBA{45, 45, 45, 100}, false)
 }
 
 // Draw the play button
