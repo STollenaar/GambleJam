@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -11,6 +12,10 @@ import (
 
 var (
 	winnerTicketAsset *ebiten.Image
+)
+
+const (
+	layoutTime = "15:04 PM"
 )
 
 type Item interface {
@@ -22,6 +27,7 @@ type Stats struct {
 
 	money int
 	day   int
+	time  time.Time
 
 	inventory []Item
 	home      *Home
@@ -54,6 +60,7 @@ func (s *Stats) CheckTicket(slot int) (t *Ticket) {
 	if ticket == nil {
 		return nil
 	}
+	s.advanceTime(time.Minute * 10)
 	if game := ticket.Interact(); game != nil {
 		s.money += game.(*TicketGame).Win
 		// Play winning sounds/graphics
@@ -74,6 +81,7 @@ func (s *Stats) HandleButtons(place Place) bool {
 
 		if ticket != nil && s.money >= ticket.Cost && s.findEmptySlot(ticket) {
 			s.money -= ticket.Cost
+			s.advanceTime(time.Minute * 5)
 			return true
 		}
 	}
@@ -89,3 +97,10 @@ func (s *Stats) findEmptySlot(input Item) bool {
 	}
 	return false
 }
+
+func (s *Stats) advanceTime(d time.Duration) {
+	if s.time.Add(d).Day() == s.time.Day() {
+		s.time = s.time.Add(d)
+	}
+}
+

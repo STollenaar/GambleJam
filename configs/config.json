@@ -1,16 +1,16 @@
 {
     "startingMoney": 10000,
     "screenWidth": 800,
-    "screenHeight": 600,
+    "screenHeight": 800,
     "margin": 5,
     "buttons": {
         "sleep": {
             "x": 747,
-            "y": 489
+            "y": 689
         },
         "store": {
             "x": 0,
-            "y": 489
+            "y": 689
         }
     }
 }

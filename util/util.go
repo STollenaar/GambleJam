@@ -4,6 +4,7 @@ import (
 	"image/color"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -82,7 +83,7 @@ func DrawCenteredTextInRect(screen *ebiten.Image, x, y float32, rectColor color.
 
 	// Calculate the position to center the text within the rectangle
 	textX := x + ConfigFile.Margin
-	textY := y + ConfigFile.Margin 
+	textY := y + ConfigFile.Margin
 
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(float64(textX), float64(textY))
@@ -98,18 +99,31 @@ func DrawCenteredTextInRect(screen *ebiten.Image, x, y float32, rectColor color.
 	}
 }
 
-func DrawText(screen *ebiten.Image, x, y float64, textColor color.Color, message string) *Button {
-	op := &text.DrawOptions{}
-	op.GeoM.Translate(x, y)
-	op.ColorScale.ScaleWithColor(textColor)
-	textWidth, textHeight := text.Measure(message, DefaultFont, 0)
-	text.Draw(screen, message, DefaultFont, op)
+func DrawText(screen *ebiten.Image, x, y float64, textColor color.Color, message string, font *text.GoTextFace) *Button {
+	if font == nil {
+		font = DefaultFont
+	}
+	var textWidth, textHeight float32
+	for _, line := range strings.Split(message, "\n") {
+		op := &text.DrawOptions{}
+		op.GeoM.Translate(x, y)
+		op.ColorScale.ScaleWithColor(textColor)
+		tw, th := text.Measure(line, DefaultFont, 0)
+		text.Draw(screen, line, font, op)
+		if float32(tw) > textWidth {
+			textWidth = float32(tw)
+		}
+		if float32(th) > textHeight {
+			textHeight = float32(th)
+		}
+		y+=float64(textHeight)
+	}
 	return &Button{
 		Name:   message,
 		X:      float32(x),
 		Y:      float32(y),
-		Width:  float32(textWidth),
-		Height: float32(textHeight),
+		Width:  textWidth,
+		Height: textHeight,
 	}
 }
 

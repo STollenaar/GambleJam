@@ -37,8 +37,9 @@ type Circle struct {
 	x, y, r float32
 }
 type Game struct {
-	currentPlace Place
-	isGameOver   bool
+	currentPlace       Place
+	isGameOver         bool
+	isDrawingNewsPaper bool
 
 	stats *Stats
 	input util.InputHandler
@@ -96,12 +97,13 @@ func NewGame(input util.InputHandler) (*Game, error) {
 	}
 
 	return &Game{
-		currentPlace: HOME,
-		startX:       73.2,
-		startY:       7.7,
-		startWidth:   251.9,
-		startHeight:  283.1,
-		startRot:     45.3,
+		currentPlace:       HOME,
+		isDrawingNewsPaper: true,
+		startX:             73.2,
+		startY:             7.7,
+		startWidth:         251.9,
+		startHeight:        283.1,
+		startRot:           45.3,
 		stats: &Stats{
 			money:     util.ConfigFile.StartingMoney,
 			day:       0,
@@ -121,11 +123,17 @@ func NewGame(input util.InputHandler) (*Game, error) {
 // Draw implements ebiten.Game.
 func (g *Game) Draw(screen *ebiten.Image) {
 	if g.isGameOver {
-		util.DrawText(screen, 200,200, util.SelectActiveColor(true), "GAME OVER")
+		util.DrawText(screen, 200, 200, util.SelectActiveColor(true), "GAME OVER", nil)
+		return
+	}
+	if g.isDrawingNewsPaper {
+		g.drawNewsPaper(screen)
 		return
 	}
 	// Draw end of day information
-	util.DrawCenteredTextInRect(screen, 340, 20, color.RGBA{50, 50, 50, 255}, color.White, fmt.Sprintf("DAY %d", g.stats.day+1))
+	vector.DrawFilledRect(screen, 335, 15, 160, 30, color.RGBA{50, 50, 50, 255}, false)
+	util.DrawText(screen, 340, 20, color.White, fmt.Sprintf("DAY %d", g.stats.day+1), nil)
+	util.DrawText(screen, 410, 20, color.White, g.stats.time.Format(layoutTime), nil)
 
 	g.drawInventory(screen)
 	switch g.currentPlace {
@@ -148,6 +156,11 @@ func (g *Game) Layout(outsideWidth int, outsideHeight int) (screenWidth int, scr
 // Update implements ebiten.Game.
 func (g *Game) Update() error {
 	if g.isGameOver {
+		return nil
+	}
+	if g.isDrawingNewsPaper && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		g.isDrawingNewsPaper = false
+		g.stats.time = time.Date(0, 0, 0, 7, 0, 0, 0, time.Local)
 		return nil
 	}
 
@@ -224,10 +237,14 @@ func (g *Game) HandleButtons() bool {
 				switch button.Name {
 				case "STORE":
 					g.currentPlace = STORE
+					g.stats.advanceTime(time.Hour)
 				case "SLEEP":
-					g.stats.day++ // Advance to the next day
-					g.stats.home.UpdateMembers()
-					g.stats.money -= g.stats.home.totalBills
+					if g.stats.time.Hour() >= 19 {
+						g.stats.day++ // Advance to the next day
+						g.stats.home.UpdateMembers()
+						g.stats.money -= g.stats.home.totalBills
+						g.stats.time = time.Date(0, 0, 0, 7, 0, 0, 0, time.Local)
+					}
 				case "food":
 					g.stats.home.isBuyingFood = !g.stats.home.isBuyingFood
 				case "heating":
@@ -245,6 +262,7 @@ func (g *Game) HandleButtons() bool {
 			case STORE:
 				if button.Name == "HOME" {
 					g.currentPlace = HOME
+					g.stats.advanceTime(time.Hour)
 					return true
 				}
 			}
@@ -314,7 +332,6 @@ func (g *Game) findInventorySlot() bool {
 		if ticket := g.stats.CheckTicket(slot); ticket != nil {
 			asset := ebiten.NewImage(winnerTicketAsset.Bounds().Size().X, winnerTicketAsset.Bounds().Size().Y)
 			ticketAsset := TicketAssets[ticket.Name]
-			// asset := winnerTicketAsset
 
 			doptions := &ebiten.DrawImageOptions{}
 			doptions.GeoM.Scale(251.9/float64(ticketAsset.Bounds().Dx()), 283.1/float64(ticketAsset.Bounds().Dy()))
@@ -358,4 +375,13 @@ func (g *Game) pointInWhichCircle(x, y float32) int {
 
 func distance(x1, y1, x2, y2 float32) float32 {
 	return float32(math.Sqrt(float64((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))))
+}
+
+func (g *Game) DoGameLoop() {
+	for {
+		time.Sleep(time.Second * 5)
+		if !g.isDrawingNewsPaper {
+			g.stats.advanceTime(time.Minute * 10)
+		}
+	}
 }

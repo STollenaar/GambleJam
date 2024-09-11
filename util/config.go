@@ -58,33 +58,13 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-
-	// handjet, err := os.ReadFile("./assets/fonts/Handjet.ttf")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// handjetSource, err := text.NewGoTextFaceSource(bytes.NewReader(handjet))
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	unifraktur, err := os.ReadFile("./assets/fonts/UnifrakturMaguntia.ttf")
-	if err != nil {
-		log.Fatal(err)
-	}
-	unifrakturSource, err := text.NewGoTextFaceSource(bytes.NewReader(unifraktur))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-
+	
 	DefaultFont = &text.GoTextFace{
 		Source: s,
 		Size:   15,
 	}
 	TitleFont = &text.GoTextFace{
-		Source: unifrakturSource,
+		Source: s,
 		Size:   30,
 	}
 

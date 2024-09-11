@@ -18,6 +18,7 @@ func main() {
 
 	ebiten.SetWindowSize(util.ConfigFile.ScreenWidth, util.ConfigFile.ScreenHeight)
 	ebiten.SetWindowTitle("Scratch Tickets, Please!")
+	go game.DoGameLoop()
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
 	}
