@@ -1,9 +1,170 @@
 {
     "1": {
         "newspaperTemplate": "1",
-        "headline": "WHAT IS GOING ON?!",
-        "article1": "mass layoffs everywhere!!",
-        "article2": "these are this months newest millonaires",
-        "article3": "government to cut jobs"
+        "headline": "STOCK MARKET IN FREEFALL",
+        "article1": "Hedge funds making millions on the downfall",
+        "article2": "Government to investigate insider trading",
+        "article3": "Mexico tourism boom despite economic crash",
+        "article4": "Unexpected rise in tech stocks baffles experts"
+    },
+    "2": {
+        "newspaperTemplate": "1",
+        "headline": "SCRATCH TICKETS SALES SKYROCKET",
+        "article1": "Economic uncertainty drives citizens to gamble",
+        "article2": "New millionaire emerges from $1 scratch-off",
+        "article3": "Experts warn against relying on gambling for income",
+        "article4": "Record low for inflation control: A surprise win"
+    },
+    "3": {
+        "newspaperTemplate": "1",
+        "headline": "LAYOFFS CONTINUE ACROSS THE NATION",
+        "article1": "Tech and retail sectors hit hardest",
+        "article2": "Local lottery sales up 300% amid job losses",
+        "article3": "Grocery prices soar as demand dwindles",
+        "article4": "Unemployment rates drop in surprising recovery"
+    },
+    "4": {
+        "newspaperTemplate": "1",
+        "headline": "SCRATCH TICKET MANIA SWEEPS THE COUNTRY",
+        "article1": "People are gambling their last savings",
+        "article2": "Jackpot winner spends millions in local economy",
+        "article3": "Financial advisors warn against high-risk gambling",
+        "article4": "Small businesses thrive in sudden growth"
+    },
+    "5": {
+        "newspaperTemplate": "1",
+        "headline": "ECONOMY PLUMMETS: ARE WE HEADED FOR A RECESSION?",
+        "article1": "National debt reaches record highs",
+        "article2": "Lottery-funded schools celebrate record profits",
+        "article3": "Real estate crashes in major cities",
+        "article4": "Interest rates cut: Markets react positively"
+    },
+    "6": {
+        "newspaperTemplate": "1",
+        "headline": "MILLIONS TURN TO GAMBLING AMID FINANCIAL RUIN",
+        "article1": "Scratch tickets as the last hope for many families",
+        "article2": "Legal gambling age questioned in new proposal",
+        "article3": "Surge in high-stakes gambling among the youth",
+        "article4": "Community park builds new playground"
+    },
+    "7": {
+        "newspaperTemplate": "1",
+        "headline": "FOOD BANKS OVERWHELMED AS UNEMPLOYMENT SPIKES",
+        "article1": "Gambling addiction hotline calls triple",
+        "article2": "Luxury car market surprisingly resilient",
+        "article3": "Housing crisis worsens: Evictions on the rise",
+        "article4": "New startup creates 500 jobs in tech boom"
+    },
+    "8": {
+        "newspaperTemplate": "1",
+        "headline": "SCRATCH TICKETS THE LAST HOPE FOR SOME",
+        "article1": "Small towns hit hardest by job losses",
+        "article2": "Rising jackpot draws in millions of hopefuls",
+        "article3": "Local winner donates half of winnings to charity",
+        "article4": "Billionaire philanthropy grows amidst crisis"
+    },
+    "9": {
+        "newspaperTemplate": "1",
+        "headline": "RETAIL STORES SHUTTER AS SPENDING DECLINES",
+        "article1": "Gambling addiction rates soar in tough times",
+        "article2": "Small businesses close doors after years of success",
+        "article3": "Scratch ticket spending seen as 'investment'",
+        "article4": "Online sales see unprecedented growth"
+    },
+    "10": {
+        "newspaperTemplate": "1",
+        "headline": "GOLD RUSH: SCRATCH TICKET SALES AT ALL-TIME HIGH",
+        "article1": "Retail jobs vanish, but ticket sales rise",
+        "article2": "Winners celebrating, others in debt",
+        "article3": "Is the scratch ticket boom sustainable?",
+        "article4": "Downtown shopping district thriving unexpectedly"
+    },
+    "11": {
+        "newspaperTemplate": "1",
+        "headline": "CITIZENS DESPERATE AS INCOMES VANISH",
+        "article1": "Record numbers turn to lottery for financial relief",
+        "article2": "Casino stocks skyrocket despite economic woes",
+        "article3": "Family loses life savings on scratch tickets",
+        "article4": "New tech innovation lowers unemployment"
+    },
+    "12": {
+        "newspaperTemplate": "1",
+        "headline": "SCRATCH TICKET FEVER: MILLIONS LINE UP FOR A CHANCE",
+        "article1": "Economists fear long-term impacts of gambling boom",
+        "article2": "Scratch ticket machines pop up in grocery stores",
+        "article3": "Winners and losers: The cost of a gamble",
+        "article4": "Farmers report best crop yields in years"
+    },
+    "13": {
+        "newspaperTemplate": "1",
+        "headline": "MILLIONS IN DEBT AS GAMBLING SPIKES",
+        "article1": "Scratch ticket sales hit record highs during crisis",
+        "article2": "Financial advisors urge caution amidst ticket boom",
+        "article3": "Winner uses prize to buy out local business",
+        "article4": "Tech firms hiring thousands of remote workers"
+    },
+    "14": {
+        "newspaperTemplate": "1",
+        "headline": "BIG WINS BRING HOPE TO TROUBLED ECONOMY",
+        "article1": "Local businesses report big boost from lottery winners",
+        "article2": "Scratch ticket spending becomes a daily habit",
+        "article3": "Citizens face homelessness amidst economic ruin",
+        "article4": "Renewable energy industry reaches new milestone"
+    },
+    "15": {
+        "newspaperTemplate": "1",
+        "headline": "SCRATCH TICKET OBSESSION HITS PEAK",
+        "article1": "Experts call gambling boom 'dangerous to public health'",
+        "article2": "Record number of new millionaires",
+        "article3": "High-stakes gambling fuels nationwide crisis",
+        "article4": "Housing market experiences unexpected recovery"
+    },
+    "16": {
+        "newspaperTemplate": "1",
+        "headline": "ECONOMIC OUTLOOK BLEAK: JOBS VANISH NATIONWIDE",
+        "article1": "Gambling offers false hope for economic relief",
+        "article2": "Homelessness surges as jobs disappear",
+        "article3": "Government debates stimulus as people turn to lottery",
+        "article4": "Surge in luxury yacht sales defies predictions"
+    },
+    "17": {
+        "newspaperTemplate": "1",
+        "headline": "MONEY SHORTAGE AS BANKS RUN DRY",
+        "article1": "People turn to scratch tickets to solve financial woes",
+        "article2": "Record wins reported, but many lose everything",
+        "article3": "Luxury goods sales soar despite economic fears",
+        "article4": "Free healthcare initiative approved by government"
+    },
+    "18": {
+        "newspaperTemplate": "1",
+        "headline": "SCRATCH TICKETS BRING WINNERS AND LOSERS",
+        "article1": "Gambling addiction rates at all-time high",
+        "article2": "Hopefuls spend last savings on one last chance",
+        "article3": "Homeless shelters overwhelmed as families lose homes",
+        "article4": "Stock market rebounds in surprising turnaround"
+    },
+    "19": {
+        "newspaperTemplate": "1",
+        "headline": "SCRATCH TICKET BOOM CONTINUES AMIDST RECESSION",
+        "article1": "People spending last paychecks on lottery tickets",
+        "article2": "Gambling addiction hits record levels",
+        "article3": "Winner donates entire prize to local charity",
+        "article4": "Major tech company to invest in new jobs"
+    },
+    "20": {
+        "newspaperTemplate": "1",
+        "headline": "CRISIS WORSENS: ECONOMY ON THE BRINK",
+        "article1": "Massive layoffs announced across major industries",
+        "article2": "Unemployment hits all-time high, scratch tickets soar",
+        "article3": "Gambling becomes last hope for many",
+        "article4": "Community gardens flourish amidst uncertainty"
+    },
+    "21": {
+        "newspaperTemplate": "1",
+        "headline": "ECONOMY IN TATTERS, SCRATCH TICKETS BOOM",
+        "article1": "Millions turn to scratch tickets for salvation",
+        "article2": "Experts worry about lasting effects of gambling",
+        "article3": "Hopeful players line up for million-dollar jackpots",
+        "article4": "Travel industry rebounds in unexpected turn"
     }
 }

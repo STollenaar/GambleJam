@@ -116,7 +116,7 @@ func DrawText(screen *ebiten.Image, x, y float64, textColor color.Color, message
 		if float32(th) > textHeight {
 			textHeight = float32(th)
 		}
-		y+=float64(textHeight)
+		y += float64(textHeight)
 	}
 	return &Button{
 		Name:   message,
@@ -132,4 +132,83 @@ func SelectActiveColor(b bool) color.RGBA {
 		return activeColor
 	}
 	return inactiveColor
+}
+
+// measureText measures the width and height of a line of text with a specific font face
+func measureText(line string, face *text.GoTextFace) (width, height float64) {
+	return text.Measure(line, face, 0)
+}
+
+// wrapText splits the message into lines that fit within the specified width
+func wrapText(message string, face *text.GoTextFace, maxWidth float64) []string {
+	words := strings.Fields(message) // Split message into words
+	var lines []string
+	var line string
+
+	for _, word := range words {
+		testLine := line + word + " "
+		lineWidth, _ := measureText(testLine, face)
+
+		if lineWidth > maxWidth && line != "" {
+			// Add the current line to the lines slice and start a new line
+			lines = append(lines, strings.TrimSpace(line))
+			line = word + " "
+		} else {
+			// Add the word to the current line
+			line = testLine
+		}
+	}
+
+	// Append the final line
+	if line != "" {
+		lines = append(lines, strings.TrimSpace(line))
+	}
+
+	return lines
+}
+
+// adjustFontSize dynamically adjusts the font size to fit within the rectangle
+func adjustFontSize(message string, font *text.GoTextFace, maxWidth, maxHeight, minSize float64) *text.GoTextFace {
+	for size := font.Size; size >= minSize; size -= 1 {
+		font = &text.GoTextFace{
+			Source: font.Source,
+			Size:   size,
+		}
+		lines := wrapText(message, font, maxWidth)
+
+		// Measure total height of the wrapped text
+		_, lineHeight := measureText(message, font) // Get height of one line of text
+		totalLineHeight := lineHeight * float64(len(lines))
+		if totalLineHeight <= maxHeight {
+			return font
+		}
+	}
+	return DefaultFont // Default font if no suitable size is found
+}
+
+// DrawTextInRect wraps and draws text within a rectangle, scaling font size to fit
+func DrawTextInRect(screen *ebiten.Image, message string, x, y, width, height float64, textColor color.Color, font *text.GoTextFace) {
+	if font == nil {
+		font = DefaultFont
+	}
+
+	// Dynamically adjust font size to fit within the rectangle
+	font = adjustFontSize(message, font, width, height, 5)
+	// Wrap the text into lines that fit the rectangle width
+	lines := wrapText(message, font, width)
+	// Draw each line inside the rectangle
+	drawY := y
+	_, lineHeight := measureText(strings.Join(lines, "\n"), font)
+	for _, line := range lines {
+		lineWidth, _ := measureText(line, font)
+		// Center each line horizontally
+		op := &text.DrawOptions{}
+		textX := x + (width-float64(lineWidth))/2
+		op.GeoM.Translate(textX, drawY)
+		op.ColorScale.ScaleWithColor(textColor)
+		// Draw the line
+		text.Draw(screen, line, font, op)
+		// Move the Y position down for the next line
+		drawY += float64(lineHeight)
+	}
 }

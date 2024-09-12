@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -21,34 +22,38 @@ const (
 	article3X, article3Y = float64(532), float64(115)
 )
 
-type Point struct {
-	X float64 `json:"x"`
-	Y float64 `json:"y"`
+type Rect struct {
+	X      float64 `json:"x"`
+	Y      float64 `json:"y"`
+	Width  float64 `json:"width"`
+	Height float64 `json:"height"`
 }
 
 type Newspaper struct {
 	Template *ebiten.Image
 
-	Headline Point `json:"headline"`
+	Headline Rect `json:"headline"`
 
-	Article1 Point `json:"article1"`
-	Article2 Point `json:"article2"`
-	Article3 Point `json:"article3"`
+	Article1 Rect `json:"article1"`
+	Article2 Rect `json:"article2"`
+	Article3 Rect `json:"article3"`
+	Article4 Rect `json:"article4"`
 }
 
 type Story struct {
 	NewspaperTemplate string `json:"newspaperTemplate"`
-	Headline string `json:"headline"`
-	Article1 string `json:"article1"`
-	Article2 string `json:"article2"`
-	Article3 string `json:"article3"`
+	Headline          string `json:"headline"`
+	Article1          string `json:"article1"`
+	Article2          string `json:"article2"`
+	Article3          string `json:"article3"`
+	Article4          string `json:"article4"`
 }
 
 var (
 	fadedColor = color.RGBA{96, 95, 88, 255}
 
 	newspapers map[string]Newspaper
-	story map[string]Story
+	story      map[string]Story
 )
 
 func init() {
@@ -90,17 +95,19 @@ func init() {
 }
 
 func (g *Game) drawNewsPaper(screen *ebiten.Image) {
-	newspaper := newspapers["1"]
-	today := story["1"]
+
+	today := story[strconv.Itoa(g.stats.day+1)]
+	newspaper := newspapers[today.NewspaperTemplate]
 
 	paper := ebiten.NewImageFromImage(newspaper.Template)
 
-	util.DrawText(paper, dateX, dateY, fadedColor, "September", nil)
+	util.DrawText(paper, dateX, dateY, fadedColor, fmt.Sprintf("%d September 2008", g.stats.day+1), nil)
 
-	util.DrawText(paper, newspaper.Headline.X, newspaper.Headline.Y, color.Black, today.Headline, util.TitleFont)
-	util.DrawText(paper, newspaper.Article1.X, newspaper.Article1.Y, color.Black, today.Article1, nil)
-	util.DrawText(paper, newspaper.Article2.X, newspaper.Article2.Y, color.Black, today.Article2, nil)
-	util.DrawText(paper, newspaper.Article3.X, newspaper.Article3.Y, color.Black, today.Article3, nil)
+	util.DrawTextInRect(paper, today.Headline, newspaper.Headline.X, newspaper.Headline.Y, newspaper.Headline.Width, newspaper.Headline.Height, color.Black, util.TitleFont)
+	util.DrawTextInRect(paper, today.Article1, newspaper.Article1.X, newspaper.Article1.Y, newspaper.Article1.Width, newspaper.Article1.Height, color.Black, nil)
+	util.DrawTextInRect(paper, today.Article2, newspaper.Article2.X, newspaper.Article2.Y, newspaper.Article2.Width, newspaper.Article2.Height, color.Black, nil)
+	util.DrawTextInRect(paper, today.Article3, newspaper.Article3.X, newspaper.Article3.Y, newspaper.Article3.Width, newspaper.Article3.Height, color.Black, nil)
+	util.DrawTextInRect(paper, today.Article4, newspaper.Article4.X, newspaper.Article4.Y, newspaper.Article4.Width, newspaper.Article4.Height, color.Black, nil)
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(float64(util.ConfigFile.ScreenWidth)/2-float64(paper.Bounds().Dx())/2, float64(util.ConfigFile.ScreenHeight)/2-float64(paper.Bounds().Dy())/2)
 	screen.DrawImage(paper, op)

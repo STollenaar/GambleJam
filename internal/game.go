@@ -154,8 +154,9 @@ func (g *Game) Update() error {
 		return nil
 	}
 	if g.isDrawingNewsPaper && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-		g.isDrawingNewsPaper = false
-		g.stats.time = time.Date(0, 0, 0, 7, 0, 0, 0, time.Local)
+		g.stats.day++
+		// g.isDrawingNewsPaper = false
+		// g.stats.time = time.Date(0, 0, 0, 7, 0, 0, 0, time.Local)
 		return nil
 	}
 
