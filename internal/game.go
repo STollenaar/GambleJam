@@ -241,6 +241,7 @@ func (g *Game) HandleButtons() bool {
 						g.stats.day++ // Advance to the next day
 						g.stats.home.UpdateMembers()
 						g.stats.money -= g.stats.home.totalBills
+						g.isDrawingNewsPaper = true
 						g.stats.time = time.Date(0, 0, 0, 7, 0, 0, 0, time.Local)
 					}
 				case "food":
