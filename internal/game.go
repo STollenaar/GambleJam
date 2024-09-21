@@ -362,6 +362,7 @@ func (g *Game) findInventorySlot() bool {
 }
 
 func (g *Game) handleScratch() {
+	util.PlayMP3("assets/sounds/scratching.mp3")
 	g.isDrawingScratchTicket = false
 	if ticket := g.stats.CheckTicket(g.drawingScratchTicket); ticket != nil {
 		asset := ebiten.NewImage(winnerTicketAsset.Bounds().Size().X, winnerTicketAsset.Bounds().Size().Y)
@@ -389,7 +390,7 @@ func (g *Game) handleScratch() {
 			isBlocking:  true,
 			effect: &Effect{
 				name:     "fadeout",
-				duration: 4,
+				duration: 3,
 			},
 		})
 	}

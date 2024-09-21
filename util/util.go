@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"image/color"
 	"io"
 	"os"
@@ -32,6 +33,7 @@ func PlayMP3(path string) error {
 	// Open the MP3 file
 	mp3File, err := os.Open(path)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	defer mp3File.Close()
@@ -39,12 +41,14 @@ func PlayMP3(path string) error {
 	// Decode the MP3 file
 	decoder, err := mp3.NewDecoder(mp3File)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 
 	// Create an audio context with a sample rate (usually 44100 Hz for MP3)
 	context, err := oto.NewContext(decoder.SampleRate(), 2, 2, 8192)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	defer context.Close()
@@ -56,12 +60,14 @@ func PlayMP3(path string) error {
 	// Read the entire MP3 file into memory and play it
 	data, err := io.ReadAll(decoder)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 
 	// Play the audio
 	_, err = player.Write(data)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 
