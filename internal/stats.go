@@ -11,7 +11,8 @@ import (
 )
 
 var (
-	winnerTicketAsset *ebiten.Image
+	winnerTicketAsset  *ebiten.Image
+	scratchTicketAsset *ebiten.Image
 )
 
 const (
@@ -40,6 +41,12 @@ func init() {
 		log.Fatal(err)
 	}
 	winnerTicketAsset = igbm
+
+	sigbm, _, err := ebitenutil.NewImageFromFile("./assets/scratchTicket.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+	scratchTicketAsset = sigbm
 }
 
 func (s *Stats) CheckTicket(slot int) (t *Ticket) {
@@ -93,4 +100,3 @@ func (s *Stats) advanceTime(d time.Duration) {
 		s.time = s.time.Add(d)
 	}
 }
-

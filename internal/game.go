@@ -37,9 +37,11 @@ type Circle struct {
 	x, y, r float32
 }
 type Game struct {
-	currentPlace       Place
-	isGameOver         bool
-	isDrawingNewsPaper bool
+	currentPlace           Place
+	isGameOver             bool
+	isDrawingNewsPaper     bool
+	isDrawingScratchTicket bool
+	drawingScratchTicket   int
 
 	stats *Stats
 	input util.InputHandler
@@ -140,6 +142,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 	for _, animation := range g.activeAnimations {
 		screen.DrawImage(animation.image, animation.drawOptions)
+	}
+	if g.isDrawingScratchTicket {
+		g.drawScratchingTicket(screen)
 	}
 }
 
@@ -268,6 +273,9 @@ func (g *Game) HandleButtons() bool {
 		}
 
 		switch {
+		case g.isDrawingScratchTicket:
+			g.handleScratch()
+			return true
 		case g.stats.HandleButtons(g.currentPlace):
 			return true
 		case g.findInventorySlot():
@@ -323,44 +331,68 @@ func (g *Game) drawInventory(screen *ebiten.Image) {
 	}
 }
 
+func (g *Game) drawScratchingTicket(screen *ebiten.Image) {
+	asset := ebiten.NewImage(scratchTicketAsset.Bounds().Size().X, scratchTicketAsset.Bounds().Size().Y)
+	ticket := g.stats.inventory[g.drawingScratchTicket].(*Ticket)
+	ticketAsset := TicketAssets[ticket.Name]
+
+	doptions := &ebiten.DrawImageOptions{}
+	doptions.GeoM.Scale(271/float64(ticketAsset.Bounds().Dx()), 549/float64(ticketAsset.Bounds().Dy()))
+	doptions.GeoM.Translate(105, 3)
+
+	asset.DrawImage(ticketAsset, doptions)
+	asset.DrawImage(scratchTicketAsset, &ebiten.DrawImageOptions{})
+
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(100, 100)
+
+	screen.DrawImage(asset, op)
+}
+
 func (g *Game) findInventorySlot() bool {
 	mouseX, mouseY := ebiten.CursorPosition()
 
 	slot := g.pointInWhichCircle(float32(mouseX), float32(mouseY))
 	if slot != -1 {
-		if ticket := g.stats.CheckTicket(slot); ticket != nil {
-			asset := ebiten.NewImage(winnerTicketAsset.Bounds().Size().X, winnerTicketAsset.Bounds().Size().Y)
-			ticketAsset := TicketAssets[ticket.Name]
-
-			doptions := &ebiten.DrawImageOptions{}
-			doptions.GeoM.Scale(251.9/float64(ticketAsset.Bounds().Dx()), 283.1/float64(ticketAsset.Bounds().Dy()))
-			// Move the image's center to the origin for rotation
-			centerX, centerY := float64(asset.Bounds().Dx())/2, float64(asset.Bounds().Dy())/2
-			doptions.GeoM.Translate(-centerX, -centerY)
-			// Rotate the image anti-clockwise by 90 degrees (π/2 radians)
-			doptions.GeoM.Rotate(-(45.3 * math.Pi / 180))
-			// Move the image back from the origin to its original position plus any desired offset
-			doptions.GeoM.Translate(73.2+centerX, 7.7+centerY)
-
-			asset.DrawImage(ticketAsset, doptions)
-			asset.DrawImage(winnerTicketAsset, &ebiten.DrawImageOptions{})
-
-			op := &ebiten.DrawImageOptions{}
-			op.GeoM.Translate(200, 100)
-			g.activeAnimations = append(g.activeAnimations, &Animation{
-				image:       asset,
-				drawOptions: op,
-				startTime:   time.Now(),
-				isBlocking:  true,
-				effect: &Effect{
-					name:     "fadeout",
-					duration: 4,
-				},
-			})
-		}
+		g.isDrawingScratchTicket = true
+		g.drawingScratchTicket = slot
 		return true
 	}
 	return false
+}
+
+func (g *Game) handleScratch() {
+	g.isDrawingScratchTicket = false
+	if ticket := g.stats.CheckTicket(g.drawingScratchTicket); ticket != nil {
+		asset := ebiten.NewImage(winnerTicketAsset.Bounds().Size().X, winnerTicketAsset.Bounds().Size().Y)
+		ticketAsset := TicketAssets[ticket.Name]
+
+		doptions := &ebiten.DrawImageOptions{}
+		doptions.GeoM.Scale(251.9/float64(ticketAsset.Bounds().Dx()), 283.1/float64(ticketAsset.Bounds().Dy()))
+		// Move the image's center to the origin for rotation
+		centerX, centerY := float64(asset.Bounds().Dx())/2, float64(asset.Bounds().Dy())/2
+		doptions.GeoM.Translate(-centerX, -centerY)
+		// Rotate the image anti-clockwise by 90 degrees (π/2 radians)
+		doptions.GeoM.Rotate(-(45.3 * math.Pi / 180))
+		// Move the image back from the origin to its original position plus any desired offset
+		doptions.GeoM.Translate(73.2+centerX, 7.7+centerY)
+
+		asset.DrawImage(ticketAsset, doptions)
+		asset.DrawImage(winnerTicketAsset, &ebiten.DrawImageOptions{})
+
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Translate(200, 100)
+		g.activeAnimations = append(g.activeAnimations, &Animation{
+			image:       asset,
+			drawOptions: op,
+			startTime:   time.Now(),
+			isBlocking:  true,
+			effect: &Effect{
+				name:     "fadeout",
+				duration: 4,
+			},
+		})
+	}
 }
 
 func (g *Game) pointInWhichCircle(x, y float32) int {
