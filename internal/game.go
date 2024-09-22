@@ -337,14 +337,14 @@ func (g *Game) drawScratchingTicket(screen *ebiten.Image) {
 	ticketAsset := TicketAssets[ticket.Name]
 
 	doptions := &ebiten.DrawImageOptions{}
-	doptions.GeoM.Scale(271/float64(ticketAsset.Bounds().Dx()), 549/float64(ticketAsset.Bounds().Dy()))
-	doptions.GeoM.Translate(105, 3)
+	doptions.GeoM.Scale(318/float64(ticketAsset.Bounds().Dx()), 549/float64(ticketAsset.Bounds().Dy()))
+	doptions.GeoM.Translate(120, 3)
 
 	asset.DrawImage(ticketAsset, doptions)
 	asset.DrawImage(scratchTicketAsset, &ebiten.DrawImageOptions{})
 
 	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(100, 100)
+	op.GeoM.Translate(50, 100)
 
 	screen.DrawImage(asset, op)
 }
